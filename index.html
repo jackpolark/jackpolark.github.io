@@ -1,11 +1,741 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>My Portfolio</title>
-  </head>
-  <body>
-    <h1>Hello, world!</h1>
-    <p>My portfolio is coming soon.</p>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jack Polark — Portfolio</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    /* ── CSS Variables ─────────────────────────────── */
+    :root {
+      --bg:         #080b10;
+      --bg2:        #0d1117;
+      --panel:      #111620;
+      --border:     #1e2733;
+      --accent:     #00e5ff;
+      --accent2:    #ff4d6d;
+      --text:       #e8edf5;
+      --muted:      #6b7a8d;
+      --font-head:  'Syne', sans-serif;
+      --font-mono:  'Space Mono', monospace;
+    }
+
+    /* ── Reset ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; display: block; }
+
+    /* ── Noise overlay ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ── Scanlines ─────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,229,255,0.015) 2px,
+        rgba(0,229,255,0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* ── Nav ───────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 4rem;
+      background: rgba(8,11,16,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); text-decoration: none; }
+
+    /* ── Hero ──────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 4rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated grid background */
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    /* Glowing orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: rgba(0,229,255,0.06);
+      top: -100px; right: -100px;
+    }
+    .orb-2 {
+      width: 350px; height: 350px;
+      background: rgba(255,77,109,0.05);
+      bottom: 50px; left: 10%;
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 860px;
+    }
+
+    .hero-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      opacity: 0; /* animated in */
+    }
+    .hero-label::before {
+      content: '> ';
+    }
+
+    .hero-name {
+      font-family: var(--font-head);
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      opacity: 0; /* animated in */
+    }
+    .hero-name .accent-line {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--accent);
+    }
+
+    .hero-tagline {
+      margin-top: 2rem;
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 480px;
+      opacity: 0; /* animated in */
+    }
+    .hero-tagline strong { color: var(--text); font-weight: 700; }
+
+    .hero-cta {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0; /* animated in */
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+    .btn-ghost {
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    .btn-ghost:hover {
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    /* Floating terminal widget */
+    .hero-terminal {
+      position: absolute;
+      right: 4rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 340px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      opacity: 0; /* animated in */
+      display: none; /* shown on larger screens via media query */
+    }
+    @media (min-width: 1100px) {
+      .hero-terminal { display: block; }
+    }
+    .terminal-bar {
+      background: var(--border);
+      padding: 0.5rem 1rem;
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .terminal-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .terminal-dot:nth-child(1) { background: #ff5f56; }
+    .terminal-dot:nth-child(2) { background: #ffbd2e; }
+    .terminal-dot:nth-child(3) { background: #27c93f; }
+    .terminal-body {
+      padding: 1.2rem 1.4rem;
+      font-size: 0.78rem;
+      line-height: 1.9;
+      color: var(--muted);
+    }
+    .terminal-body .t-line { display: block; }
+    .terminal-body .t-cmd  { color: var(--accent); }
+    .terminal-body .t-out  { color: #aab4c0; padding-left: 1rem; }
+    .terminal-body .t-warn { color: var(--accent2); }
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--accent);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Section commons ───────────────────────────── */
+    section { padding: 6rem 4rem; }
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+    .section-label::before { content: '// '; }
+    .section-title {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 3rem;
+    }
+    .reveal { opacity: 0; transform: translateY(30px); }
+
+    /* ── About ─────────────────────────────────────── */
+    #about {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-text p { color: var(--muted); margin-bottom: 1rem; }
+    .about-text p strong { color: var(--text); }
+
+    /* Skills chips */
+    .skills-group { margin-bottom: 1.8rem; }
+    .skills-group-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 0.8rem;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .chip {
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--panel);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Projects ──────────────────────────────────── */
+    #projects { background: var(--bg); }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .project-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s;
+      cursor: default;
+    }
+    .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,229,255,0.04) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .project-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,229,255,0.35);
+    }
+    .project-card:hover::before { opacity: 1; }
+
+    .project-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .project-type {
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .project-type.hardware { border-color: rgba(255,77,109,0.4); color: var(--accent2); }
+    .project-type.software { border-color: rgba(0,229,255,0.4); color: var(--accent); }
+
+    .project-links { display: flex; gap: 0.8rem; }
+    .project-links a {
+      font-size: 0.75rem;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .project-links a:hover { color: var(--accent); text-decoration: none; }
+
+    .project-title {
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+      color: var(--text);
+    }
+    .project-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .project-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .stack-tag {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1px;
+    }
+
+    /* ── Contact ───────────────────────────────────── */
+    #contact {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    #contact .section-title { margin-bottom: 1rem; }
+    #contact p { color: var(--muted); margin-bottom: 2.5rem; max-width: 420px; margin-left: auto; margin-right: auto; }
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    footer {
+      padding: 2rem 4rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    footer span { color: var(--accent); }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      section { padding: 4rem 1.5rem; }
+      #hero { padding: 7rem 1.5rem 3rem; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ── -->
+  <nav>
+    <div class="nav-logo">Your<span>.</span>Name</div>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section id="hero">
+    <div class="hero-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="hero-content">
+      <p class="hero-label" id="hero-label">Available for opportunities</p>
+
+      <h1 class="hero-name" id="hero-name">
+        Your<br />
+        <span class="accent-line">Name</span>
+      </h1>
+
+      <p class="hero-tagline" id="hero-tagline">
+        <!-- ✏️ Edit this one-liner to describe what you do -->
+        <strong>Software & Hardware Engineer.</strong> I build things that run on silicon — from embedded firmware to full-stack web apps.
+      </p>
+
+      <div class="hero-cta" id="hero-cta">
+        <a href="#projects" class="btn">View Projects</a>
+        <a href="#contact" class="btn btn-ghost">Get In Touch</a>
+      </div>
+    </div>
+
+    <!-- Floating terminal (hidden on small screens) -->
+    <div class="hero-terminal" id="hero-terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+      </div>
+      <div class="terminal-body">
+        <span class="t-line"><span class="t-cmd">$ whoami</span></span>
+        <!-- ✏️ Edit these terminal lines to match your info -->
+        <span class="t-line t-out">your-name</span>
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line"><span class="t-cmd">$ cat skills.txt</span></span>
+        <span class="t-line t-out">C++, Python, JavaScript</span>
+        <span class="t-line t-out">Arduino, Raspberry Pi</span>
+        <span class="t-line t-out">React, Node, Git</span>
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line"><span class="t-cmd">$ ls projects/</span></span>
+        <span class="t-line t-out">project-1/ project-2/</span>
+        <span class="t-line t-out">project-3/ project-4/</span>
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line"><span class="t-cmd">$ <span class="cursor"></span></span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── About ── -->
+  <section id="about">
+    <p class="section-label reveal">About</p>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <h2 class="section-title">A bit about me.</h2>
+        <!-- ✏️ Replace this with your own bio -->
+        <p>I'm a <strong>Computer Science &amp; Electrical Engineering student</strong> with a passion for building things end-to-end — from PCB design to production deployments.</p>
+        <p>I enjoy working at the intersection of hardware and software: writing firmware for microcontrollers, designing circuits, and building the web interfaces that talk to them.</p>
+        <p>When I'm not coding, you'll find me <strong>at the gym</strong>, tinkering with electronics, or deep in a rabbit hole on something new.</p>
+        <br />
+        <a href="#" class="btn" style="font-size:0.75rem">Download Résumé ↗</a>
+      </div>
+
+      <div class="reveal">
+        <!-- ✏️ Edit skill chips to match your actual skills -->
+        <div class="skills-group">
+          <p class="skills-group-label">Software</p>
+          <div class="chips">
+            <span class="chip">Python</span>
+            <span class="chip">JavaScript</span>
+            <span class="chip">C++</span>
+            <span class="chip">React</span>
+            <span class="chip">Node.js</span>
+            <span class="chip">Git</span>
+          </div>
+        </div>
+        <div class="skills-group">
+          <p class="skills-group-label">Hardware</p>
+          <div class="chips">
+            <span class="chip">Arduino</span>
+            <span class="chip">Raspberry Pi</span>
+            <span class="chip">KiCad</span>
+            <span class="chip">Oscilloscopes</span>
+            <span class="chip">I²C / SPI / UART</span>
+          </div>
+        </div>
+        <div class="skills-group">
+          <p class="skills-group-label">Tools & Other</p>
+          <div class="chips">
+            <span class="chip">Linux</span>
+            <span class="chip">Docker</span>
+            <span class="chip">Fusion 360</span>
+            <span class="chip">Figma</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Projects ── -->
+  <section id="projects">
+    <p class="section-label reveal">Work</p>
+    <h2 class="section-title reveal">Selected Projects.</h2>
+
+    <div class="projects-grid">
+
+      <!-- ✏️ PROJECT CARD — duplicate this block to add more projects -->
+      <div class="project-card reveal">
+        <div class="project-card-top">
+          <span class="project-type hardware">Hardware</span>
+          <div class="project-links">
+            <a href="#">GitHub ↗</a>
+            <a href="#">Demo ↗</a>
+          </div>
+        </div>
+        <h3 class="project-title">Project One</h3>
+        <p class="project-desc">A short description of what this project does and why it's interesting. Keep it to 2–3 sentences. What problem does it solve?</p>
+        <div class="project-stack">
+          <span class="stack-tag">C++</span>
+          <span class="stack-tag">Arduino</span>
+          <span class="stack-tag">KiCad</span>
+        </div>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-card-top">
+          <span class="project-type software">Software</span>
+          <div class="project-links">
+            <a href="#">GitHub ↗</a>
+            <a href="#">Demo ↗</a>
+          </div>
+        </div>
+        <h3 class="project-title">Project Two</h3>
+        <p class="project-desc">A short description of what this project does and why it's interesting. Keep it to 2–3 sentences. What problem does it solve?</p>
+        <div class="project-stack">
+          <span class="stack-tag">Python</span>
+          <span class="stack-tag">React</span>
+          <span class="stack-tag">PostgreSQL</span>
+        </div>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-card-top">
+          <span class="project-type hardware">Hardware</span>
+          <div class="project-links">
+            <a href="#">GitHub ↗</a>
+          </div>
+        </div>
+        <h3 class="project-title">Project Three</h3>
+        <p class="project-desc">A short description of what this project does and why it's interesting. Keep it to 2–3 sentences. What problem does it solve?</p>
+        <div class="project-stack">
+          <span class="stack-tag">Raspberry Pi</span>
+          <span class="stack-tag">Python</span>
+          <span class="stack-tag">MQTT</span>
+        </div>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-card-top">
+          <span class="project-type software">Software</span>
+          <div class="project-links">
+            <a href="#">GitHub ↗</a>
+            <a href="#">Live ↗</a>
+          </div>
+        </div>
+        <h3 class="project-title">Project Four</h3>
+        <p class="project-desc">A short description of what this project does and why it's interesting. Keep it to 2–3 sentences. What problem does it solve?</p>
+        <div class="project-stack">
+          <span class="stack-tag">JavaScript</span>
+          <span class="stack-tag">Node.js</span>
+          <span class="stack-tag">REST API</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Contact ── -->
+  <section id="contact">
+    <p class="section-label reveal">Contact</p>
+    <h2 class="section-title reveal">Let's connect.</h2>
+    <!-- ✏️ Edit the email and links below -->
+    <p class="reveal">Whether it's a project, an opportunity, or just a question — my inbox is open.</p>
+    <div class="contact-links reveal">
+      <a href="mailto:you@email.com" class="btn">Email Me</a>
+      <a href="https://github.com/yourusername" class="btn btn-ghost" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/yourprofile" class="btn btn-ghost" target="_blank">LinkedIn</a>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <span>© 2026 Your Name</span>
+    <span>Built with <span>&#60;/&#62;</span> and caffeine.</span>
+  </footer>
+
+  <!-- ── GSAP Animations ── -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero entrance — staggered sequence
+    const heroTl = gsap.timeline({ delay: 0.2 });
+    heroTl
+      .to('#hero-label',    { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' })
+      .to('#hero-name',     { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.3')
+      .to('#hero-tagline',  { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
+      .to('#hero-cta',      { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '-=0.3')
+      .to('#hero-terminal', { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out' }, '-=0.5');
+
+    // Set initial state for hero-terminal (slide from right)
+    gsap.set('#hero-terminal', { x: 40 });
+
+    // Scroll-triggered reveals for .reveal elements
+    gsap.utils.toArray('.reveal').forEach((el) => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 88%',
+          toggleActions: 'play none none none',
+        },
+      });
+    });
+
+    // Project cards stagger within their container
+    gsap.utils.toArray('.project-card').forEach((card, i) => {
+      gsap.to(card, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+        delay: i * 0.08,
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 90%',
+          toggleActions: 'play none none none',
+        },
+      });
+    });
+
+    // Subtle parallax on hero orbs
+    gsap.to('.orb-1', {
+      yPercent: -25,
+      ease: 'none',
+      scrollTrigger: { trigger: '#hero', scrub: 1.5 },
+    });
+    gsap.to('.orb-2', {
+      yPercent: 20,
+      ease: 'none',
+      scrollTrigger: { trigger: '#hero', scrub: 2 },
+    });
+
+    // Hover tilt on project cards
+    document.querySelectorAll('.project-card').forEach((card) => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width  - 0.5;
+        const y = (e.clientY - rect.top)  / rect.height - 0.5;
+        gsap.to(card, {
+          rotateX: -y * 6,
+          rotateY:  x * 6,
+          transformPerspective: 800,
+          duration: 0.4,
+          ease: 'power2.out',
+        });
+      });
+      card.addEventListener('mouseleave', () => {
+        gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power2.out' });
+      });
+    });
+  </script>
+</body>
 </html>
